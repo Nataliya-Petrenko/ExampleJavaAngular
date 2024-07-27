@@ -1,12 +1,12 @@
 # ExampleJavaAngular
 
-Here is how to create an interaction between Java and Angular to get started with a simple example with an explanation. Some explanations are generated using ChatGPT. Code tested in practice.
+Here is how to create an interaction between Java and Angular to get started with a simple example with an explanation.
 
 ## Initialization and structuring of the repository:
 
 Structure your repository with separate folders for the front-end and back-end:
 ```
-my-project/
+ExampleJavaAngular/
 ├── backend/
 │   └── (Java REST API code)
 └── frontend/
@@ -14,13 +14,14 @@ my-project/
 ```
 
 If starting from scratch, create a new repository:
+
 ```
-git init my-project
-cd my-project
-mkdir backend frontend
+git init ExampleJavaAngular
 git add .
-git commit -m "Initial commit with backend and frontend"
+git commit -m "Initial commit"
 ```
+
+'backend' and 'frontend' folders can be created when the corresponding projects are created, so you don't need to create them right away.
 
 If necessary, connect the new repository to the remote repository.
 
@@ -34,7 +35,7 @@ For a simple example, we only need Spring Web.
 
 ![image](https://github.com/user-attachments/assets/82fcd893-d38f-4369-99a5-817775a85920)
 
-Extract the project to the backend directory.
+Extract the project to the 'ExampleJavaAngular'-'backend' directory.
 
 ![image](https://github.com/user-attachments/assets/806f56d3-dfdb-493c-8924-2ee874151136)
 
@@ -224,3 +225,192 @@ You can view your json-data at http://localhost:8080/api/data
 
 
 ## Angular Front-End
+
+### Set Up Your Development Environment
+
+Install Node.js and npm (Node Package Manager).
+
+Install Angular CLI globally using npm:
+
+```
+npm install -g @angular/cli
+```
+
+### Create a new Angular project
+
+You can use VSCode as an IDE for example.
+Open the ExampleJavaAngular folder in the IDE.
+
+![image](https://github.com/user-attachments/assets/99af876a-cd14-4ff9-b4d4-a58a54fd9881)
+
+Open terminal ctrl+~.
+
+Create new project by commands:
+
+```
+ng new frontend
+```
+
+![image](https://github.com/user-attachments/assets/62798773-0b8f-4089-942e-7e95411b84bb)
+
+![image](https://github.com/user-attachments/assets/f641a73b-b8a3-43a3-8742-394455371dac)
+
+Go to the project:
+
+```
+cd frontend
+```
+
+![image](https://github.com/user-attachments/assets/14d2669a-97c7-4170-a26b-373de27dd630)
+
+Use Angular CLI to generate components, services, and other necessary parts of your application:
+
+https://v17.angular.io/cli/generate
+
+### Service for HTTP Requests:
+
+Create a service that will handle HTTP requests to your Java REST API. For example, api.service.ts:
+
+```
+ng generate service api
+```
+
+The service must contain the following code (for now we start with just a get request):
+
+```
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiService {
+  private apiUrl = 'http://localhost:8080/api';
+
+  constructor(private http: HttpClient) { }
+
+  getData(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/data`);
+  }
+
+}
+```
+
+Don't forget to save changes ctrl+S!
+
+### Create Your Angular Components
+
+```
+ng generate component my --standalone
+```
+
+'standalone' - whether the generated component is standalone.
+
+The 'frontend\src\app\my\my.component.ts' must contain the following code:
+
+```
+import { Component, OnInit  } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http'; 
+import { ApiService } from '../api.service';
+
+@Component({
+  selector: 'app-my-comp',
+  standalone: true,
+  imports: [CommonModule, HttpClientModule],
+  templateUrl: './my.component.html',
+  styleUrl: './my.component.css'
+})
+export class MyCompComponent implements OnInit {
+  data: any;
+
+  constructor(private apiService: ApiService) { }
+
+  ngOnInit(): void {
+    this.apiService.getData().subscribe(
+      response => {
+      console.log('Data fetched successfully:', response);
+      this.data = response;
+    },
+    error => {
+      console.error('Error fetching data:', error);
+    }
+  );
+  }
+
+}
+```
+
+The 'frontend\src\app\my\my.component.html' must contain the following code:
+
+```
+<div>
+    <h1>Data from API</h1>
+    <pre>{{ data | json }}</pre>
+</div>
+```
+
+The 'frontend\src\app\app.component.ts' must contain the following code:
+
+```
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { HttpClientModule } from '@angular/common/http'; 
+import { MyComponent } from './my/my.component';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, HttpClientModule, MyComponent],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
+})
+export class AppComponent {
+  title = 'ExampleJavaAngular';
+}
+```
+
+The 'frontend\src\app\app.component.html' must contain the following code:
+
+```
+<div>
+  <h1>{{ title }}</h1>
+  <app-my-comp></app-my-comp>
+</div>
+```
+
+The 'frontend\src\app\app.config.ts' must contain the following code:
+
+```
+import { ApplicationConfig } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient()
+  ]
+};
+```
+
+The 'frontend\src\main.ts' must contain the following code:
+
+```
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, appConfig)
+  .catch((err) => console.error(err));
+```
+
+To start the server:
+```
+ng serve
+```
+
+To exit:  ctrl+C
+
+http://localhost:4200/
+
+![image](https://github.com/user-attachments/assets/0bcd68c5-4c20-4500-b0ca-e5fa79d1330b)
